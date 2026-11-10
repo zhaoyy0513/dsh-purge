@@ -20,15 +20,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/mmparko/dsh-purge.git
           git fetch upstream --tags --prune
           git checkout master
 
-          # 1. sync all tags
-          git push origin --tags --force || echo "tag push skipped (tags already present)"
+          # 1. sync all tags (best effort: existing lightweight tags may differ from upstream annotated ones)
+          git push origin --tags --force || echo "tag push skipped"
 
           # 2. sync upstream branches (master is merged to keep local commits)
           for b in $(git for-each-ref --format='%(refname:short)' refs/remotes/upstream | sed 's#^upstream/##'); do
@@ -43,3 +43,5 @@ jobs:
             fi
           done
           git push origin master --force-with-lease || echo "push master skipped"
+          echo "sync finished"
+          exit 0
