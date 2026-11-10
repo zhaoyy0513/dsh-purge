@@ -28,7 +28,7 @@ jobs:
           git checkout master
 
           # 1. sync all tags
-          git push origin --tags --force-with-lease
+          git push origin --tags --force
 
           # 2. sync upstream branches (master is merged to keep local commits)
           for b in $(git for-each-ref --format='%(refname:short)' refs/remotes/upstream | sed 's#^upstream/##'); do
