@@ -27,8 +27,10 @@ jobs:
           git fetch upstream --tags --prune
           git checkout master
 
-          # 1. sync all tags (best effort: existing lightweight tags may differ from upstream annotated ones)
-          git push origin --tags --force || echo "tag push skipped"
+          # 1. sync new tags one by one (best effort; existing tags are left untouched)
+          for t in $(git for-each-ref --format='%(refname:short)' refs/tags); do
+            git push origin "$t:$t" --force >/dev/null 2>&1 || true
+          done
 
           # 2. sync upstream branches (master is merged to keep local commits)
           for b in $(git for-each-ref --format='%(refname:short)' refs/remotes/upstream | sed 's#^upstream/##'); do
