@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Sync branches and tags from upstream
+      - name: Sync branches from upstream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -27,12 +27,7 @@ jobs:
           git fetch upstream --tags --prune
           git checkout master
 
-          # 1. sync new tags one by one (best effort; existing tags are left untouched)
-          for t in $(git for-each-ref --format='%(refname:short)' refs/tags); do
-            git push origin "$t:$t" --force >/dev/null 2>&1 || true
-          done
-
-          # 2. sync upstream branches (master is merged to keep local commits)
+          # sync upstream branches (master is merged to keep local commits)
           for b in $(git for-each-ref --format='%(refname:short)' refs/remotes/upstream | sed 's#^upstream/##'); do
             if [ "$b" = "master" ]; then
               git merge upstream/master --no-edit || echo "merge master skipped"
@@ -45,5 +40,4 @@ jobs:
             fi
           done
           git push origin master --force-with-lease || echo "push master skipped"
-          echo "sync finished"
-          exit 0
+          echo "branch sync finished"
