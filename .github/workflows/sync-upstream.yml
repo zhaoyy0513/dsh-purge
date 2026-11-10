@@ -27,15 +27,17 @@ jobs:
           git fetch upstream --tags --prune
           git checkout master
 
-          # 1. sync all tags (includes archive/pr-* tags, same commits as the branches)
+          # 1. sync all tags
           git push origin --tags --force-with-lease
 
           # 2. sync upstream branches (master is merged to keep local commits)
           for b in $(git for-each-ref --format='%(refname:short)' refs/remotes/upstream | sed 's#^upstream/##'); do
             if [ "$b" = "master" ]; then
               git merge upstream/master --no-edit || echo "merge master skipped"
+            elif echo "$b" | grep -q '^archive/'; then
+              echo "skip $b (PR archive branch; same commits available via archive tags)"
             elif git ls-tree -r --name-only "upstream/$b" | grep -q '^.github/workflows/'; then
-              echo "skip $b (contains workflow files; same content available via archive tags)"
+              echo "skip $b (contains workflow files)"
             else
               git push origin "upstream/$b:$b" --force-with-lease || echo "push $b skipped"
             fi
