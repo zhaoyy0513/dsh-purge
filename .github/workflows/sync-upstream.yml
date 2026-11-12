@@ -2,7 +2,7 @@ name: Sync upstream
 
 on:
   schedule:
-    - cron: "17 3 * * *"
+    - cron: "17 3 * * 1"   # 每周一 UTC 03:17 = 北京时间 11:17
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Sync branches from upstream
+      - name: Sync branches and tags from upstream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -24,7 +24,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/mmparko/dsh-purge.git
-          git fetch upstream --no-tags --prune
+
+          # --tags --force：本地标签强制与上游对齐，避免 "would clobber existing tag"
+          git fetch upstream --prune --tags --force
           git checkout master
 
           # sync upstream branches (master is merged to keep local commits)
@@ -40,4 +42,7 @@ jobs:
             fi
           done
           git push origin master --force-with-lease || echo "push master skipped"
+
+          # 标签与上游强制对齐，彻底消除 would clobber existing tag
+          git push origin --tags --force || echo "push tags skipped"
           echo "branch sync finished"
